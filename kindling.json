@@ -1,0 +1,115 @@
+{
+ "version": 1,
+ "title": "GLM-5.3",
+ "variant": "exlr8, K3, int4 KV, 1M context",
+ "summary": "Full GLM-5.3 on six DGX Sparks at TP=6 with gr8 and the K3 settings: a 1,048,576-token int4 KV pool (the full 1M model limit) with SHARE_LIMIT=131,072 so sessions up to 131K share decode steps, MTP drafting, four sessions.",
+ "model": "kindlingai/glm-5.3-exlr8-k2-k3-k4",
+ "hardware": "DGX Spark (GB10)",
+ "stack": [
+  "gr8",
+  "exlr8",
+  "MTP",
+  "int4 KV"
+ ],
+ "engine": {
+  "repo": "kindlingai/gr8",
+  "ref": "v1.0",
+  "commit": "db6f2c17c7b05303b69ce667e416d10340aeb9b7",
+  "pin": "image",
+  "image": "ghcr.io/kindlingai/gr8:v1.0",
+  "image_digest": "sha256:11ff2823184b0512ae62e0f1c281c46941cfb0fd81096e1dac4c313ad3fe9413"
+ },
+ "default_config": "k3",
+ "configs": [
+  {
+   "id": "k3",
+   "label": "TP=6",
+   "nodes": 6,
+   "decode": {
+    "code": 78.4,
+    "prose": 57.9,
+    "structured": 81.3
+   },
+   "decode_prompt_tokens": [
+    46,
+    54
+   ],
+   "prefill": [
+    {
+     "context": 8192,
+     "tps": 2367
+    },
+    {
+     "context": 32768,
+     "tps": 2248
+    },
+    {
+     "context": 131072,
+     "tps": 1948
+    }
+   ],
+   "concurrency": [
+    {
+     "streams": 1,
+     "aggregate_tps": 67.9
+    },
+    {
+     "streams": 2,
+     "aggregate_tps": 87.9
+    },
+    {
+     "streams": 4,
+     "aggregate_tps": 100.2
+    },
+    {
+     "streams": 8,
+     "aggregate_tps": 106.3
+    }
+   ],
+   "concurrency_prompt_tokens": [
+    48,
+    55
+   ],
+   "max_context": 1048570,
+   "kv_pool_tokens": 1048576,
+   "max_concurrent": 4,
+   "max_tokens_per_chat": [
+    {
+     "chats": 1,
+     "tokens": 1048570,
+     "source": "measured"
+    },
+    {
+     "chats": 2,
+     "tokens": 196346,
+     "source": "computed"
+    },
+    {
+     "chats": 4,
+     "tokens": 70970,
+     "source": "computed"
+    }
+   ],
+   "max_tokens_per_chat_note": "prompt + max_tokens",
+   "quality": [
+    {
+     "name": "Needle recall",
+     "value": "found at 128K and 901K"
+    },
+    {
+     "name": "KL vs fp8 KV",
+     "value": "0.0160 nats (top-1 96.0%)"
+    },
+    {
+     "name": "75-item check",
+     "value": "72 of 75 (fp8: 74 of 75)"
+    },
+    {
+     "name": "Smoke test",
+     "value": "14 of 14"
+    }
+   ],
+   "notes": "This recipe's .env (int4 KV, the default) on the gr8 sha-a555ee2 image, Docker Compose, stock model. gr8 bench (default level), one boot, GPU clocks uncapped in the timed stages, measured 2026-11-12. Four chats decode at once (SESS=4): in the 8-stream row four requests wait for a slot."
+  }
+ ]
+}
