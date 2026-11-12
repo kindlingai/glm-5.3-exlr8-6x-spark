@@ -1,4 +1,4 @@
-# For agents: boot GLM-5.3 on six DGX Sparks (K3)
+# For agents: boot GLM-5.3 on six DGX Sparks (1M context)
 
 You are booting this recipe for someone. Follow the steps in order and run each check. If a check fails, stop and
 tell the person what failed. If this file and `compose.yaml` or `.env.example` disagree, follow those two files and
