@@ -1,17 +1,17 @@
-# KindlingAI: GLM-5.3 EXLR8 on six DGX Sparks (K3, 1M context)
+# KindlingAI: GLM-5.3 EXLR8 on six DGX Sparks (1M context)
 
 If you are an agent booting this for someone, read [AGENTS.md](AGENTS.md) first, then the Quickstart.
 
 _**Join our discord to learn more about KindlingAI and `gr8`: https://discord.gg/8EAvYPV2rE**_
 
 Full GLM-5.3 on six DGX Sparks (GB10, 128 GB each) at TP=6, served by [gr8](https://github.com/kindlingai/gr8) from
-[kindlingai/glm-5.3-exlr8-k2-k3-k4](https://huggingface.co/kindlingai/glm-5.3-exlr8-k2-k3-k4), with the K3 settings:
+[kindlingai/glm-5.3-exlr8-k2-k3-k4](https://huggingface.co/kindlingai/glm-5.3-exlr8-k2-k3-k4), tuned for 1M context:
 a 1,048,576-token int4 KV pool (the full context of the model), and the first 131,072 tokens of each chat on every box so that agent prompts up to that
 size stay fast. This recipe is the published gr8 image, pinned by digest, and one `.env` file. Nothing is compiled.
 
-![GLM-5.3 on six DGX Sparks, K3: decode, prefill and limits](docs/card.png)
+![GLM-5.3 on six DGX Sparks, 1M context: decode, prefill and limits](docs/card.png)
 
-The K3 settings build on the TP=6 recipe
+These 1M-context settings build on the TP=6 recipe
 [knapcio/GLM-5.3-gr8-6x-DGX-Spark-TP6](https://github.com/knapcio/GLM-5.3-gr8-6x-DGX-Spark-TP6). Thank you.
 
 78.4 tok/s for one request writing code · 2,248 tok/s prefill on a 32K prompt · 4 requests at once, 100.2 tok/s in
@@ -105,9 +105,9 @@ earlier KV format. Measured 2026-11-11 on the same image and boxes, one boot, th
 
 ### Earlier measurements (October 2026): long prompts
 
-K3 was first measured in October 2026 on a pre-release TP=6 build of gr8 (gr8 plus the 39 patches of the knapcio
-recipe), on bare metal, booting converted model files, with the GPU clock capped at 2000 MHz. These rows have no match
-in the benchmark above:
+This TP=6 setup was first measured in October 2026 on a pre-release TP=6 build of gr8 (gr8 plus the 39 patches of the
+knapcio recipe), on bare metal, booting converted model files, with the GPU clock capped at 2000 MHz. These rows have no
+match in the benchmark above:
 
 | measure | value |
 |---|---|
@@ -174,9 +174,10 @@ reads what the volume holds at the commits pinned in `.env`, and fetches the res
   `sudo sysctl -w vm.compaction_proactiveness=0` (gr8's
   [DEPLOY.md](https://github.com/kindlingai/gr8/blob/main/docs/DEPLOY.md#before-you-start) has the permanent form).
 
-## What K3 is
+## The 1M-context settings
 
-K3 is the TP=6 settings of the knapcio recipe (MTP=3 drafting with early stop, `KVB=bf16`), plus three changes:
+This recipe uses the TP=6 settings of the knapcio recipe (MTP=3 drafting with early stop, `KVB=bf16`), plus three
+changes:
 
 - `PF_GEMMF32=1`: a faster prefill kernel with the same output, byte for byte.
 - `GR8_K1_SPLIT=1:/4,2-3:2x1,4-32:8x1/4`: a different split of one decode kernel when several rows decode together.
