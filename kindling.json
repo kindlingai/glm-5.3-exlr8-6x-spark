@@ -1,8 +1,8 @@
 {
  "version": 1,
  "title": "GLM-5.3",
- "variant": "exlr8, int4 KV, 1M context",
- "summary": "Full GLM-5.3 on six DGX Sparks at TP=6 with gr8, tuned for 1M context: a 1,048,576-token int4 KV pool (the full 1M model limit) with SHARE_LIMIT=131,072 so sessions up to 131K share decode steps, MTP drafting, four sessions.",
+ "variant": "exlr8 bit325, int4 KV, 1M context (2.18M pool)",
+ "summary": "Full GLM-5.3 on six DGX Sparks at TP=6 with gr8 v1.1.0: exlr8 bit325 (v0.6), int4 KV with a 2,179,072-token pool (1,048,576 max context, SHARE_LIMIT=65,536), zero-copy shared prefix pages, MTP=3 drafting with confidence stopping, seven bit-exact v1.1.0 kernel paths plus MoE union cap (48 quality default, 32 fast preset), 8 concurrent sessions, 7.4+ GiB free RAM per box, and live-proven 4x250K concurrency (998K resident tokens).",
  "model": "kindlingai/glm-5.3-exlr8-k2-k3-k4",
  "hardware": "DGX Spark (GB10)",
  "stack": [
@@ -13,11 +13,11 @@
  ],
  "engine": {
   "repo": "kindlingai/gr8",
-  "ref": "v1.0",
-  "commit": "db6f2c17c7b05303b69ce667e416d10340aeb9b7",
+  "ref": "v1.1.0",
+  "commit": "cdd1e0931047f55bba8f682a0ae79c4198668ca3",
   "pin": "image",
-  "image": "ghcr.io/kindlingai/gr8:v1.0",
-  "image_digest": "sha256:11ff2823184b0512ae62e0f1c281c46941cfb0fd81096e1dac4c313ad3fe9413"
+  "image": "ghcr.io/kindlingai/gr8:v1.1.0",
+  "image_digest": "sha256:b22eedbd7902f65dbf2090897d75f5d92276cbf78a16bcde1f958aa56a306cf7"
  },
  "default_config": "tp6",
  "configs": [
@@ -26,9 +26,10 @@
    "label": "TP=6",
    "nodes": 6,
    "decode": {
-    "code": 78.4,
-    "prose": 57.9,
-    "structured": 81.3
+    "code": 78.0,
+    "prose": 58.0,
+    "structured": 81.0,
+    "counting": 84.7
    },
    "decode_prompt_tokens": [
     46,
@@ -37,79 +38,98 @@
    "prefill": [
     {
      "context": 8192,
-     "tps": 2367
+     "tps": 2467
     },
     {
      "context": 32768,
-     "tps": 2248
+     "tps": 2411
     },
     {
      "context": 131072,
-     "tps": 1948
+     "tps": 1885
     }
    ],
    "concurrency": [
     {
      "streams": 1,
-     "aggregate_tps": 67.9
+     "aggregate_tps": 66.4,
+     "per_stream_tps": 67.2,
+     "ttft_p50_s": 0.32
     },
     {
      "streams": 2,
-     "aggregate_tps": 87.9
+     "aggregate_tps": 96.3,
+     "per_stream_tps": 52.4,
+     "ttft_p50_s": 0.61
     },
     {
      "streams": 4,
-     "aggregate_tps": 100.2
+     "aggregate_tps": 117.4,
+     "per_stream_tps": 41.6,
+     "ttft_p50_s": 1.22
     },
     {
      "streams": 8,
-     "aggregate_tps": 106.3
+     "aggregate_tps": 165.1,
+     "per_stream_tps": 32.0,
+     "ttft_p50_s": 2.56
     }
    ],
    "concurrency_prompt_tokens": [
     48,
     55
    ],
-   "max_context": 1048570,
-   "kv_pool_tokens": 1048576,
-   "max_concurrent": 4,
+   "max_context": 1048576,
+   "kv_pool_tokens": 2179072,
+   "max_concurrent": 8,
    "max_tokens_per_chat": [
     {
      "chats": 1,
-     "tokens": 1048570,
+     "tokens": 1048576,
      "source": "measured"
     },
     {
      "chats": 2,
-     "tokens": 196346,
+     "tokens": 925690,
+     "source": "computed"
+    },
+    {
+     "chats": 3,
+     "tokens": 507898,
      "source": "computed"
     },
     {
      "chats": 4,
-     "tokens": 70970,
+     "tokens": 299002,
+     "source": "computed"
+    },
+    {
+     "chats": 8,
+     "tokens": 52218,
      "source": "computed"
     }
    ],
-   "max_tokens_per_chat_note": "prompt + max_tokens",
+   "max_tokens_per_chat_note": "prompt + max_tokens · live-proven: 4x250K (998,413 resident tok, 4/4 needles, 99.9% cached)",
    "quality": [
-    {
-     "name": "Needle recall",
-     "value": "found at 128K and 901K"
-    },
-    {
-     "name": "KL vs fp8 KV",
-     "value": "0.0160 nats (top-1 96.0%)"
-    },
-    {
-     "name": "75-item check",
-     "value": "72 of 75 (fp8: 74 of 75)"
-    },
     {
      "name": "Smoke test",
      "value": "14 of 14"
+    },
+    {
+     "name": "Needle recall",
+     "value": "found at 128K (131,113 tok)"
+    },
+    {
+     "name": "Live 4x250K proof",
+     "value": "998K resident, 4/4 needles, 28.1 tok/s"
+    },
+    {
+     "name": "Boot with QO cache",
+     "value": "58 s"
     }
    ],
-   "notes": "This recipe's .env (int4 KV, the default) on the gr8 sha-a555ee2 image, Docker Compose, stock model. gr8 bench (default level), one boot, GPU clocks uncapped in the timed stages, measured 2026-11-12. Four chats decode at once (SESS=4): in the 8-stream row four requests wait for a slot."
+   "lowest_mem_available_gib": 7.41,
+   "notes": "bit325 experts (3.25 bpw, v0.6 @ 3e388b45), int4 KV (CAP=2,179,072, 6,528 pages/rank, MAX_MODEL_LEN=1,048,576, SHARE_LIMIT=65,536, SESS=8, GR8_KV_SHARE_PAGES=1), MTP=3 with confidence stopping, 7 bit-exact v1.1.0 kernels ON, DEC_BK_MAX=2048, MOE_UNION_CAP=48 quality default (set MOE_UNION_CAP=32 for fast mode: 128.2 tok/s at C=4, 180.2 tok/s at C=8). bench/bench.py default level on 2026-11-20, one fresh boot on a 200G switch, GPU clocks uncapped in timed stages. Lowest MemAvailable: 7.41 GiB after bench, 7.38 GiB after 998K-token live 4x250K proof."
   }
  ]
 }
