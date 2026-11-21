@@ -9,7 +9,7 @@ tell the person.
 - It is a DGX Spark or other GB10 box with 128 GB, and no other model runs on it: `docker ps` and `nvidia-smi` show
   none.
 - Docker has the NVIDIA runtime: `docker info | grep -i nvidia`.
-- Disk: about 90 GB for the model:
+- Disk: about 65 GB for the model plus 13 GB for the QO cache (`/srv/gr8/cache/qocache`):
   `df -h "$(docker info --format '{{.DockerRootDir}}')"`, or the `GR8_CACHE` directory if you set one.
 - Hugging Face answers: `curl -sI https://huggingface.co`.
 - Proactive memory compaction is off: `sysctl vm.compaction_proactiveness` prints 0. If not, as root:
@@ -24,7 +24,7 @@ Ask the person before you change any other line.
 
 ## 3. Boot
 
-On every box: `docker compose up -d`. The first boot fetches this box's part of the model (about 90 GB).
+On every box: `sudo mkdir -p /srv/gr8/cache/qocache && sudo chown -R 1000:1000 /srv/gr8/cache`, then `docker compose up -d`. The first boot fetches this box's part of the model (about 65 GB) and writes the QO cache (13 GB); later boots take ~58 s.
 The boxes must be on a switch, not a ring. Follow it with `docker compose logs -f`.
 
 ## 4. Check
@@ -33,7 +33,7 @@ On the head:
 
 - `docker compose exec gr8 /opt/gr8/gr8 glm53 health` exits 0.
 - `docker compose exec gr8 /opt/gr8/gr8 glm53 smoke` passes 14 of 14.
-- `curl -s localhost:8100/v1/models` shows `max_model_len` 1048570.
+- `curl -s localhost:8100/v1/models` shows `max_model_len` 1048576.
 
 ## 5. Stop
 
