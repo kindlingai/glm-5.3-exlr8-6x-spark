@@ -4,7 +4,7 @@ If you are an agent booting this for someone, read [AGENTS.md](AGENTS.md) first,
 
 _**Join our discord to learn more about KindlingAI and `gr8`: https://discord.gg/8EAvYPV2rE**_
 
-Full GLM-5.3 on six DGX Sparks (GB10, 128 GB each) at TP=6, served by [gr8](https://github.com/kindlingai/gr8) `v1.1.0` from
+Full GLM-5.3 on six DGX Sparks (GB10, 128 GB each) at TP=6, served by [gr8](https://github.com/kindlingai/gr8) `v1.1.1` from
 the `bit325` width profile of [kindlingai/glm-5.3-exlr8-k2-k3-k4](https://huggingface.co/kindlingai/glm-5.3-exlr8-k2-k3-k4/tree/3e388b45b26ca4558351d22994afcfc85b99af74) (v0.6):
 a full **1,048,576-token** context window backed by a **2,179,072-token** int4 KV pool (`SHARE_LIMIT=65,536`, keeping 32K–64K prompts 100% unsharded),
 zero-copy shared prefix pages, MTP=3 drafting with confidence stopping, up to 8 concurrent chats, 7.4+ GiB free RAM per box,
@@ -174,11 +174,11 @@ This recipe has no engine code. It runs one published gr8 image, named by tag an
 
 | | |
 |---|---|
-| engine | [kindlingai/gr8](https://github.com/kindlingai/gr8) [`v1.1.0`](https://github.com/kindlingai/gr8/releases/tag/v1.1.0) at [`cdd1e09`](https://github.com/kindlingai/gr8/commit/cdd1e0931047f55bba8f682a0ae79c4198668ca3) |
-| image | `ghcr.io/kindlingai/gr8:v1.1.0` |
-| digest | `sha256:b22eedbd7902f65dbf2090897d75f5d92276cbf78a16bcde1f958aa56a306cf7` |
+| engine | [kindlingai/gr8](https://github.com/kindlingai/gr8) [`v1.1.1`](https://github.com/kindlingai/gr8/releases/tag/v1.1.1) at [`a3f44a0`](https://github.com/kindlingai/gr8/commit/a3f44a075854fc9af0ed56c6d43f7739705bc871) |
+| image | `ghcr.io/kindlingai/gr8:v1.1.1` |
+| digest | `sha256:fa5c9f66fbfa55d162782578b3262893b782e6365a76562bcab951b54acc6d96` |
 
-All TP=6 results above were measured on 2026-11-20 directly on this pinned `gr8 v1.1.0` image (`sha256:b22eedbd...`).
+The TP=6 benchmark tables above were measured on 2026-11-20 on `gr8 v1.1.0` (`cdd1e09`); `v1.1.1` (`a3f44a0`) adds the `v1.1.1` hotfix and TP=5/6 default launcher parity.
 
 After v1.0, the pin moves to a newer gr8 release only after this recipe was booted and measured on it. `python3 check.py` checks
 that `compose.yaml` and `kindling.json` name the same image; CI runs it on every pull request.
